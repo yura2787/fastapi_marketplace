@@ -11,6 +11,25 @@ A full-featured e-commerce marketplace built with a microservice architecture. U
 
 ---
 
+<img width="3388" height="2008" alt="2026-07-08_18-37_1" src="https://github.com/user-attachments/assets/238efc4f-9bc3-4563-b841-3a37acdbfc7a" />
+
+
+<img width="1590" height="892" alt="2026-07-08_19-01" src="https://github.com/user-attachments/assets/ffae1dd9-b097-42cc-ab37-570b65d604c6" />
+
+<img width="3382" height="1980" alt="2026-07-08_18-41" src="https://github.com/user-attachments/assets/ce9eaa32-d445-4933-9b50-042ede5474b6" />
+
+
+
+<img width="3382" height="1872" alt="2026-07-08_19-05" src="https://github.com/user-attachments/assets/9d0f5a96-385d-4855-9520-1b000c4bf28d" />
+
+
+<img width="2980" height="1764" alt="2026-07-08_19-06" src="https://github.com/user-attachments/assets/63e312d7-8246-4538-a45e-2fced9b0a3db" />
+
+
+
+<img width="3186" height="1508" alt="2026-07-08_19-10" src="https://github.com/user-attachments/assets/47472879-22c9-41d4-bfc2-de21ad151fea" />
+
+
 ## Features
 
 - **JWT Authentication** — access + refresh token pair, role-based access (admin / regular user)
