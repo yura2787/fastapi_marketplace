@@ -13,6 +13,7 @@ class Settings(BaseSettings):
     STRIPE_SECRET_KEY: str
     STRIPE_SUCCESS_URL: str = "http://localhost/"
     STRIPE_CANCEL_URL: str = "http://localhost/"
+    STRIPE_WEBHOOK_SECRET: str = ""
 
     DEBUG: bool = False
 
