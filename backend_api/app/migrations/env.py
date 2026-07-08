@@ -5,6 +5,7 @@ from sqlalchemy import engine_from_config, pool
 from applications.users.models import User
 from applications.products.models import Product, Cart, CartProduct, Category
 from applications.orders.models import Order, OrderItem
+from applications.reviews.models import Review
 from database.base_model import Base
 from settings import settings
 
