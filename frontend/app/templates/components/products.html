@@ -1,21 +1,130 @@
-<div class="container mt-4">
+{% macro star_display(rating) %}
+  {% set full = rating | int %}
+  {% for i in range(full) %}★{% endfor %}{% for i in range(5 - full) %}☆{% endfor %}
+{% endmacro %}
 
-  <div class="row g-4" style="justify-content: start; gap: 20px;">
+<div class="products-section">
+  <div class="container">
+    <div class="row g-4">
 
-  {% for product in products %}
+      <!-- Filter sidebar -->
+      <div class="col-lg-2 col-md-3 d-none d-md-block">
+        <div class="filter-card">
+          <div class="filter-title">Категорії</div>
+          <div class="filter-categories">
+            <a href="{{ url_for('index') }}{% if request.query_params.get('q') %}?q={{ request.query_params.get('q') }}{% endif %}"
+               class="{{ 'active' if not request.query_params.get('category_id') else '' }}">
+              🏪 Всі товари
+            </a>
+            {% for cat in categories %}
+            <a href="?category_id={{ cat.id }}{% if request.query_params.get('q') %}&q={{ request.query_params.get('q') }}{% endif %}"
+               class="{{ 'active' if request.query_params.get('category_id') == cat.id|string else '' }}">
+              {{ cat.name }}
+            </a>
+            {% endfor %}
+          </div>
 
+          <hr class="filter-divider">
 
-  <div class="card" style="width: 18rem;">
-    <img src="{{ product.main_image }}" class="card-img-top" alt="...">
-    <div class="card-body">
-      <h5 class="card-title">{{ product.title }}</h5>
-      <p class="card-text">{{ product.description|truncate(53, False) }}</p>
-      <p class="card-text">Price: {{ product.price }} grn</p>
-      <a href="{{ url_for('product_detail', product_id=product.id) }}" class="btn btn-primary">Details</a>
+          <div class="filter-title">Ціна (₴)</div>
+          <form method="get" action="{{ url_for('index') }}">
+            {% if request.query_params.get('category_id') %}
+            <input type="hidden" name="category_id" value="{{ request.query_params.get('category_id') }}">
+            {% endif %}
+            {% if request.query_params.get('q') %}
+            <input type="hidden" name="q" value="{{ request.query_params.get('q') }}">
+            {% endif %}
+            <div class="range-inputs mb-3">
+              <input type="number" name="min_price" placeholder="Від" min="0"
+                     value="{{ request.query_params.get('min_price', '') }}">
+              <input type="number" name="max_price" placeholder="До" min="0"
+                     value="{{ request.query_params.get('max_price', '') }}">
+            </div>
+
+            <hr class="filter-divider">
+
+            <div class="filter-title">Наявність</div>
+            <div class="form-check mb-3">
+              <input class="form-check-input" type="checkbox" name="in_stock" value="true" id="inStockCheck"
+                     {{ 'checked' if request.query_params.get('in_stock') == 'true' else '' }}>
+              <label class="form-check-label small" for="inStockCheck">Тільки в наявності</label>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-sm w-100">Застосувати</button>
+          </form>
+        </div>
+      </div>
+
+      <!-- Products -->
+      <div class="col-lg-10 col-md-9">
+        <div class="section-header">
+          <span class="section-title">
+            {% if request.query_params.get('q') %}
+              Результати: «{{ request.query_params.get('q') }}»
+            {% else %}
+              Всі товари
+            {% endif %}
+          </span>
+          <span class="section-count">{{ total }} товарів</span>
+        </div>
+
+        {% if products %}
+        <div class="products-grid">
+          {% for product in products %}
+          <a class="product-card" href="{{ url_for('product_detail', product_id=product.id) }}">
+            <div class="product-img-wrap">
+              <img src="{{ product.main_image }}" alt="{{ product.title }}" loading="lazy">
+              {% if product.category %}
+              <span class="product-badge badge-category">{{ product.category.name }}</span>
+              {% endif %}
+              {% if product.stock == 0 %}
+              <span class="badge-out">Немає</span>
+              {% endif %}
+            </div>
+            <div class="product-body">
+              <div class="product-title">{{ product.title }}</div>
+              <div class="product-desc">{{ product.description }}</div>
+              <div class="product-footer">
+                <div class="product-price">{{ product.price | price }} <small>₴</small></div>
+                <button class="btn btn-primary btn-sm cart-add-btn"
+                        onclick="event.preventDefault(); addToCart({{ product.id }}, this)"
+                        {% if product.stock == 0 %}disabled{% endif %}>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                    <path d="M0 1.5A.5.5 0 0 1 .5 1H2a.5.5 0 0 1 .485.379L2.89 3H14.5a.5.5 0 0 1 .491.592l-1.5 8A.5.5 0 0 1 13 12H4a.5.5 0 0 1-.491-.408L2.01 3.607 1.61 2H.5a.5.5 0 0 1-.5-.5zM5 12a2 2 0 1 0 0 4 2 2 0 0 0 0-4zm7 0a2 2 0 1 0 0 4 2 2 0 0 0 0-4z"/>
+                  </svg>
+                </button>
+              </div>
+            </div>
+          </a>
+          {% endfor %}
+        </div>
+
+        <!-- Pagination -->
+        {% if pages > 1 %}
+        <div class="pagination-wrap mt-4">
+          {% if page > 1 %}
+          <a class="page-btn" href="?page={{ page - 1 }}{% if request.query_params.get('q') %}&q={{ request.query_params.get('q') }}{% endif %}{% if request.query_params.get('category_id') %}&category_id={{ request.query_params.get('category_id') }}{% endif %}">‹</a>
+          {% endif %}
+          {% for p in range(1, pages + 1) %}
+          <a class="page-btn {{ 'active' if p == page else '' }}"
+             href="?page={{ p }}{% if request.query_params.get('q') %}&q={{ request.query_params.get('q') }}{% endif %}{% if request.query_params.get('category_id') %}&category_id={{ request.query_params.get('category_id') }}{% endif %}">{{ p }}</a>
+          {% endfor %}
+          {% if page < pages %}
+          <a class="page-btn" href="?page={{ page + 1 }}{% if request.query_params.get('q') %}&q={{ request.query_params.get('q') }}{% endif %}{% if request.query_params.get('category_id') %}&category_id={{ request.query_params.get('category_id') }}{% endif %}">›</a>
+          {% endif %}
+        </div>
+        {% endif %}
+
+        {% else %}
+        <div class="empty-state">
+          <div class="empty-icon">🔍</div>
+          <div class="empty-title">Товарів не знайдено</div>
+          <p>Спробуйте змінити фільтри або пошуковий запит</p>
+          <a href="{{ url_for('index') }}" class="btn btn-primary">Всі товари</a>
+        </div>
+        {% endif %}
+      </div>
+
     </div>
   </div>
-
-  {% endfor %}
-
-</div>
 </div>

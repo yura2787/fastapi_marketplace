@@ -1,57 +1,210 @@
 {% extends "components/base.html" %}
+{% block title %}{{ product.title }} — ShopHub{% endblock %}
 
+{% block content %}
+<div class="detail-section">
+  <div class="container">
 
+    <!-- Breadcrumb -->
+    <nav class="mb-3" style="font-size:.85rem;color:var(--text-muted)">
+      <a href="{{ url_for('index') }}" style="color:var(--primary);text-decoration:none">Головна</a>
+      {% if product.category %}
+      &nbsp;/&nbsp;
+      <a href="/?category_id={{ product.category.id }}" style="color:var(--primary);text-decoration:none">{{ product.category.name }}</a>
+      {% endif %}
+      &nbsp;/&nbsp; {{ product.title }}
+    </nav>
 
+    <div class="row">
+      <!-- Images -->
+      <div class="col-md-6">
+        <img src="{{ product.main_image }}" class="detail-img-main" id="mainImg" alt="{{ product.title }}">
+        {% if product.images %}
+        <div class="detail-thumbs">
+          <img src="{{ product.main_image }}" class="detail-thumb active"
+               onclick="setImg(this, '{{ product.main_image }}')" alt="">
+          {% for img in product.images %}
+          <img src="{{ img }}" class="detail-thumb"
+               onclick="setImg(this, '{{ img }}')" alt="">
+          {% endfor %}
+        </div>
+        {% endif %}
+      </div>
 
-  {% block content %}
+      <!-- Info -->
+      <div class="col-md-6">
+        <div class="detail-info">
+          {% if product.category %}
+          <span class="detail-category">{{ product.category.name }}</span>
+          {% endif %}
 
+          <h1 class="detail-title">{{ product.title }}</h1>
 
+          <div class="detail-rating">
+            <span class="stars-lg">
+              {% set avg = reviews_data.avg_rating if reviews_data else 0 %}
+              {% for i in range(avg | int) %}★{% endfor %}{% for i in range(5 - avg | int) %}☆{% endfor %}
+            </span>
+            <span style="font-weight:600;font-size:.95rem">{{ "%.1f"|format(avg) }}</span>
+            <span style="color:var(--text-muted);font-size:.85rem">({{ reviews_data.total if reviews_data else 0 }} відгуків)</span>
+          </div>
 
-<div class="container mt-5">
+          <div class="detail-price">{{ product.price | price }} ₴</div>
 
+          {% if product.stock > 0 %}
+          <span class="stock-pill stock-in">✓ В наявності ({{ product.stock }} шт.)</span>
+          {% else %}
+          <span class="stock-pill stock-out">✕ Немає в наявності</span>
+          {% endif %}
 
+          {% if product.stock > 0 %}
+          <div class="qty-control">
+            <button class="qty-btn" onclick="changeQty(-1)">−</button>
+            <input class="qty-val" id="qty" type="number" value="1" min="1" max="{{ product.stock }}" readonly>
+            <button class="qty-btn" onclick="changeQty(1)">+</button>
+          </div>
+          <button class="btn btn-primary w-100 py-2 mb-3"
+                  onclick="addToCartDetail({{ product.id }}, this)">
+            🛒 Додати до кошика
+          </button>
+          {% else %}
+          <button class="btn btn-secondary w-100 py-2 mb-3" disabled>Немає в наявності</button>
+          {% endif %}
 
-
-    <img src="{{ product.main_image }}" class="card-img-top" alt="..." width="250px">
-
-      <h5 class="card-title">{{ product.title }}</h5>
-      <p class="card-text">{{ product.description }}</p>
-      <p class="card-text">Price: {{ product.price }} grn</p>
-      <a href="{{ url_for('index') }}" class="btn btn-primary"> main page</a>
-
-
-
-
-<div id="carouselExample" class="carousel slide">
-  <div class="carousel-inner">
-
-    {% for image in product.images %}
-    <div class="carousel-item active">
-      <img src="{{ image }}" class="d-block w-50" alt="...">
+          <div class="detail-desc">
+            <strong style="font-size:.8rem;text-transform:uppercase;letter-spacing:.6px;color:var(--text-muted)">Опис</strong>
+            <p class="mt-2 mb-0">{{ product.description }}</p>
+          </div>
+        </div>
+      </div>
     </div>
 
-    {% endfor %}
+    <!-- Reviews -->
+    <div class="reviews-section">
+      <div class="reviews-header">
+        <div>
+          <div class="avg-score">{{ "%.1f"|format(reviews_data.avg_rating if reviews_data else 0) }}</div>
+          <div class="stars-lg mt-1">
+            {% set avg = reviews_data.avg_rating if reviews_data else 0 %}
+            {% for i in range(avg | int) %}★{% endfor %}{% for i in range(5 - avg | int) %}☆{% endfor %}
+          </div>
+          <div style="color:var(--text-muted);font-size:.82rem;margin-top:2px">{{ reviews_data.total if reviews_data else 0 }} відгуків</div>
+        </div>
+        <div style="flex:1;border-left:1px solid var(--border);padding-left:24px">
+          <h3 style="font-size:1.2rem;font-weight:700;margin-bottom:4px">Відгуки покупців</h3>
+          <p style="color:var(--text-muted);font-size:.88rem;margin:0">Реальні відгуки від наших клієнтів</p>
+        </div>
+      </div>
 
+      {% if reviews_data and reviews_data.reviews %}
+      {% for review in reviews_data.reviews %}
+      <div class="review-card">
+        <div class="d-flex align-items-center justify-content-between mb-1">
+          <div>
+            <span class="review-author">{{ review.user.name }}</span>
+            <span class="ms-2" style="color:var(--accent);font-size:.85rem">
+              {% for i in range(review.rating) %}★{% endfor %}{% for i in range(5 - review.rating) %}☆{% endfor %}
+            </span>
+          </div>
+          <span class="review-date">{{ review.created_at[:10] }}</span>
+        </div>
+        {% if review.comment %}
+        <div class="review-comment">{{ review.comment }}</div>
+        {% endif %}
+      </div>
+      {% endfor %}
+      {% else %}
+      <div class="empty-state" style="padding:32px">
+        <div class="empty-icon">💬</div>
+        <div class="empty-title">Ще немає відгуків</div>
+        <p>Будьте першим, хто залишить відгук!</p>
+      </div>
+      {% endif %}
+
+      <!-- Add review form -->
+      {% if user %}
+      <div class="review-form-card">
+        <h5 style="font-weight:700;margin-bottom:16px">Залишити відгук</h5>
+        <form id="reviewForm" onsubmit="submitReview(event, {{ product.id }})">
+          <div class="mb-3">
+            <label class="form-label">Оцінка</label>
+            <div class="star-rating">
+              {% for i in range(5, 0, -1) %}
+              <input type="radio" name="rating" id="star{{ i }}" value="{{ i }}" {{ 'required' if i == 5 else '' }}>
+              <label for="star{{ i }}">★</label>
+              {% endfor %}
+            </div>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Коментар (необов'язково)</label>
+            <textarea name="comment" class="form-control" rows="3"
+                      placeholder="Поділіться своїми враженнями..."></textarea>
+          </div>
+          <button type="submit" class="btn btn-primary">Опублікувати відгук</button>
+        </form>
+      </div>
+      {% else %}
+      <div class="review-form-card text-center" style="color:var(--text-muted)">
+        <a href="{{ url_for('login') }}" style="color:var(--primary);font-weight:600">Увійдіть</a>, щоб залишити відгук
+      </div>
+      {% endif %}
+    </div>
 
   </div>
-  <button class="carousel-control-prev" type="button" data-bs-target="#carouselExample" data-bs-slide="prev">
-    <span class="carousel-control-prev-icon" aria-hidden="true"></span>
-    <span class="visually-hidden">Previous</span>
-  </button>
-  <button class="carousel-control-next" type="button" data-bs-target="#carouselExample" data-bs-slide="next">
-    <span class="carousel-control-next-icon" aria-hidden="true"></span>
-    <span class="visually-hidden">Next</span>
-  </button>
 </div>
+{% endblock %}
 
+{% block scripts %}
+<script>
+function setImg(el, src) {
+  document.getElementById('mainImg').src = src;
+  document.querySelectorAll('.detail-thumb').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+}
 
+function changeQty(delta) {
+  const input = document.getElementById('qty');
+  const newVal = parseInt(input.value) + delta;
+  const max = parseInt(input.max);
+  if (newVal >= 1 && newVal <= max) input.value = newVal;
+}
 
+async function addToCartDetail(productId, btn) {
+  const token = document.cookie.split('; ').find(r => r.startsWith('access_token='))?.split('=')[1];
+  if (!token) { window.location.href = '/login'; return; }
+  const qty = parseInt(document.getElementById('qty')?.value || 1);
+  btn.disabled = true;
+  btn.textContent = 'Додається...';
+  try {
+    const res = await fetch('/cart/update', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: `product_id=${productId}&quantity=${qty}`
+    });
+    if (res.ok) {
+      showToast(`Додано до кошика (${qty} шт.) ✓`);
+      const badge = document.getElementById('cartBadge');
+      if (badge) { badge.style.display='flex'; badge.textContent = parseInt(badge.textContent || 0) + qty; }
+    } else { showToast('Помилка додавання', 'error'); }
+  } catch { showToast('Помилка', 'error'); }
+  finally { btn.disabled = false; btn.textContent = '🛒 Додати до кошика'; }
+}
 
-</div>
-
-
-
-
-
-
-  {% endblock %}
+async function submitReview(e, productId) {
+  e.preventDefault();
+  const form = e.target;
+  const rating = form.querySelector('input[name=rating]:checked')?.value;
+  if (!rating) { showToast('Оберіть оцінку', 'error'); return; }
+  const comment = form.querySelector('textarea[name=comment]').value;
+  try {
+    const res = await fetch(`/review/${productId}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ rating: parseInt(rating), comment: comment || null })
+    });
+    if (res.ok) { showToast('Відгук опубліковано ✓'); setTimeout(() => location.reload(), 1200); }
+    else { const d = await res.json(); showToast(d.detail || 'Помилка', 'error'); }
+  } catch { showToast('Помилка', 'error'); }
+}
+</script>
+{% endblock %}

@@ -1,41 +1,40 @@
-<nav class="navbar navbar-expand-lg bg-body-tertiary">
-  <div class="container-fluid">
-    <a class="navbar-brand" href="{{ url_for('index') }}">Main</a>
-    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
-      <span class="navbar-toggler-icon"></span>
-    </button>
-    <div class="collapse navbar-collapse" id="navbarSupportedContent">
-      <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-        <li class="nav-item">
-          <a class="nav-link active" aria-current="page" href="#">Home</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" href="#">Link</a>
-        </li>
-        <li class="nav-item dropdown">
-          <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-            Dropdown
-          </a>
-          <ul class="dropdown-menu">
-            <li><a class="dropdown-item" href="#">Action</a></li>
-            <li><a class="dropdown-item" href="#">Another action</a></li>
-            <li><hr class="dropdown-divider"></li>
-            <li><a class="dropdown-item" href="#">Something else here</a></li>
-          </ul>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link disabled" aria-disabled="true">Disabled</a>
-        </li>
-      </ul>
+<nav class="site-nav">
+  <div class="container">
+    <a class="nav-brand" href="{{ url_for('index') }}">Shop<span>Hub</span></a>
 
+    <form class="nav-search" method="get" action="{{ url_for('index') }}">
+      {% if request.query_params.get('category_id') %}
+      <input type="hidden" name="category_id" value="{{ request.query_params.get('category_id') }}">
+      {% endif %}
+      <input name="q" type="search" placeholder="Пошук товарів..." value="{{ request.query_params.get('q', '') }}">
+      <button class="btn btn-primary btn-sm px-3" type="submit">Знайти</button>
+    </form>
 
-      <form class="d-flex" role="search" method="post" action="{{ url_for('index') }}">
-        <input name='query'  class="form-control me-2" type="search" placeholder="Search" aria-label="Search"/>
-        <button class="btn btn-outline-success" type="submit">Search</button>
-      </form>
+    <div class="nav-actions">
+      <a href="{{ url_for('cart_page') }}" class="btn-nav-cart">
+        🛒
+        {% if cart_count and cart_count > 0 %}
+        <span class="cart-badge" id="cartBadge">{{ cart_count }}</span>
+        {% else %}
+        <span class="cart-badge" id="cartBadge" style="display:none">0</span>
+        {% endif %}
+      </a>
 
-        {%  include "components/login_comp.html" %}
-
+      {% if user %}
+      <div class="dropdown">
+        <button class="btn btn-light btn-sm dropdown-toggle fw-600" type="button" data-bs-toggle="dropdown">
+          👤 {{ user.name }}
+        </button>
+        <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0">
+          <li><span class="dropdown-item-text text-muted small">{{ user.email }}</span></li>
+          <li><hr class="dropdown-divider my-1"></li>
+          <li><a class="dropdown-item" href="{{ url_for('logout') }}">🚪 Вийти</a></li>
+        </ul>
+      </div>
+      {% else %}
+      <a href="{{ url_for('login') }}" class="btn btn-outline-primary btn-sm">Увійти</a>
+      <a href="{{ url_for('register') }}" class="btn btn-primary btn-sm">Реєстрація</a>
+      {% endif %}
     </div>
   </div>
 </nav>

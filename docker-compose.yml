@@ -9,25 +9,6 @@ services:
     volumes:
       - ./documentation:/docs:ro
 
-  local_database:
-    image: postgres:16-alpine
-    container_name: local_database
-    hostname: local_database
-    restart: always
-    env_file:
-      - .env
-    ports:
-      - "6655:${POSTGRES_PORT}"
-    volumes:
-      - postgres_datastorage:/var/lib/postgresql/data
-    networks:
-      - main_network
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
-      interval: 5s
-      timeout: 5s
-      retries: 10
-
   redis:
     image: redis:7-alpine
     container_name: redis
@@ -51,8 +32,6 @@ services:
     env_file:
       - .env
     depends_on:
-      local_database:
-        condition: service_healthy
       redis:
         condition: service_healthy
     volumes:
@@ -96,6 +75,8 @@ services:
     restart: always
     env_file:
       - .env
+    environment:
+      PYTHONUNBUFFERED: "1"
     volumes:
       - ./notification_service/app:/app
     command: |
@@ -118,6 +99,3 @@ networks:
   main_network:
     driver: bridge
 
-volumes:
-  postgres_datastorage:
-    external: false

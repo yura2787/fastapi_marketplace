@@ -22,6 +22,7 @@ async def create_product_in_db(
     session.add(new_product)
 
     await session.commit()
+    await session.refresh(new_product)
     return new_product
 
 
@@ -103,6 +104,16 @@ async def create_category(data: CategoryCreateSchema, session: AsyncSession) -> 
     session.add(category)
     await session.commit()
     return category
+
+
+async def delete_product(product: Product, session: AsyncSession) -> None:
+    await session.delete(product)
+    await session.commit()
+
+
+async def delete_category(category: Category, session: AsyncSession) -> None:
+    await session.delete(category)
+    await session.commit()
 
 
 async def get_product_by_pk(pk: int, session: AsyncSession) -> Product | None:

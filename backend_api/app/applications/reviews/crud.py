@@ -30,6 +30,7 @@ async def create_review(
     review = Review(user_id=user_id, product_id=product_id, rating=rating, comment=comment)
     session.add(review)
     await session.commit()
+    await session.refresh(review, ["user"])
     return review
 
 
