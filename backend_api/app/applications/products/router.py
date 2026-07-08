@@ -4,7 +4,7 @@ from typing import Annotated
 from applications.auth.security import admin_required, get_current_user
 
 from applications.products.crud import create_product_in_db, get_products_data, get_product_by_pk, get_or_create_cart, get_or_create_cart_product
-from applications.products.schemas import ProductSchema, SearchParamsSchema, CartSchema
+from applications.products.schemas import ProductSchema, SearchParamsSchema, CartSchema, ProductListResponse
 from services.s3.s3 import s3_storage
 from sqlalchemy.ext.asyncio import AsyncSession
 from applications.users.models import User
@@ -22,7 +22,6 @@ async def get_current_cart(
     session: AsyncSession = Depends(get_async_session),
 )  -> CartSchema:
     cart = await get_or_create_cart(user_id=user.id, session=session)
-    # print(cart.cart_products[0].product.__dict__)
 
     response = CartSchema.from_orm(cart)
     response = response.filter_zero_quantity_products()
@@ -90,7 +89,7 @@ async def get_product(pk: int, session: AsyncSession = Depends(get_async_session
     return product
 
 
-@products_router.get('/')
+@products_router.get('/', response_model=ProductListResponse)
 async def get_products(params: Annotated[SearchParamsSchema, Depends()], session: AsyncSession = Depends(get_async_session)):
     result = await get_products_data(params, session)
     return result

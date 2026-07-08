@@ -9,7 +9,6 @@ async def login_user(user_email: str, password: str):
             data={"username": user_email, 'password': password}
 
         )
-        print(response.json())
         return response.json()
 
 
@@ -34,7 +33,6 @@ async def get_user_info(access_token: str):
             headers={"Authorization": f'Bearer {access_token}'}
 
         )
-        print(response.json())
         return response.json()
 
 

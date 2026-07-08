@@ -41,7 +41,6 @@ class AuthHandler:
         now = datetime.now()
         time_payload = {"exp": now + expiry, "iat": now}
         token = jwt.encode(payload | time_payload, self.secret, self.algorithm)
-        print(token)
         return token
 
     async def decode_token(self, token: str) -> dict:
