@@ -1,33 +1,29 @@
 import json
 import ssl
 
-import pika
+import aio_pika
 from settings import settings
 
 
 class RabbitMQBroker:
-    def __init__(self):
+    async def send_message(self, message: dict, queue_name: str):
         ssl_context = ssl.create_default_context()
-
-        self.connection_params = pika.ConnectionParameters(
+        connection = await aio_pika.connect_robust(
             host=settings.RMQ_HOST,
             port=settings.RMQ_PORT,
-            virtual_host=settings.RMQ_VIRTUAL_HOST,
-            credentials=pika.PlainCredentials(username=settings.RMQ_USER, password=settings.RMQ_PASSWORD),
-            ssl_options=pika.SSLOptions(context=ssl_context),
+            virtualhost=settings.RMQ_VIRTUAL_HOST,
+            login=settings.RMQ_USER,
+            password=settings.RMQ_PASSWORD,
+            ssl=True,
+            ssl_context=ssl_context,
         )
-
-    async def get_connection(self) -> pika.BlockingConnection:
-        return pika.BlockingConnection(parameters=self.connection_params)
-
-    async def send_message(self, message: dict, queue_name: str):
-        with await self.get_connection() as connection:
-            with connection.channel() as channel:
-                channel.queue_declare(queue=queue_name)
-
-                message_json_str = json.dumps(message)
-
-                channel.basic_publish(exchange="", routing_key=queue_name, body=message_json_str.encode())
+        async with connection:
+            channel = await connection.channel()
+            await channel.declare_queue(queue_name, durable=True)
+            await channel.default_exchange.publish(
+                aio_pika.Message(body=json.dumps(message).encode()),
+                routing_key=queue_name,
+            )
 
 
 rabbitmq_broker = RabbitMQBroker()

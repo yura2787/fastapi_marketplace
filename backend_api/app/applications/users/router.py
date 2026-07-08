@@ -4,6 +4,8 @@ from applications.users.crud import activate_user_account, create_user_in_db, ge
 from applications.users.schemas import BaseUserInfo, RegisterUserFields
 from database.session import get_async_session
 from fastapi import APIRouter, Depends, HTTPException, Request, status
+from services.rabbit.constants import SupportedQueues
+from services.rabbit.rabbitmq_service import rabbitmq_broker
 from sqlalchemy.ext.asyncio import AsyncSession
 
 router_users = APIRouter()
@@ -18,11 +20,14 @@ async def create_user(
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Already exists")
 
     created_user = await create_user_in_db(new_user.email, new_user.name, new_user.password, session)
-    # await rabbitmq_broker.send_message(
-    #     message={"name": created_user.name, "email": created_user.email,
-    #              'redirect_url': str(request.url_for('verify_user', user_uuid=created_user.uuid_data))
-    #              },
-    #     queue_name=SupportedQueues.USER_REGISTRATION)
+    await rabbitmq_broker.send_message(
+        message={
+            "name": created_user.name,
+            "email": created_user.email,
+            "redirect_url": str(request.url_for("verify_user", user_uuid=created_user.uuid_data)),
+        },
+        queue_name=SupportedQueues.USER_REGISTRATION,
+    )
 
     return created_user
 

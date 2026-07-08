@@ -5,6 +5,7 @@ from applications.payment.router import router_payment
 from applications.products.router import cart_router, categories_router, products_router
 from applications.reviews.router import reviews_router
 from applications.users.router import router_users
+from applications.ws.router import ws_router
 from fastapi import FastAPI
 from settings import settings
 
@@ -24,4 +25,5 @@ def get_application() -> FastAPI:
     app.include_router(router_orders, prefix="/orders", tags=["Orders"])
     app.include_router(reviews_router, prefix="/reviews", tags=["Reviews"])
     app.include_router(router_payment, prefix="/payment", tags=["Payment"])
+    app.include_router(ws_router, prefix="/ws", tags=["WebSocket"])
     return app
