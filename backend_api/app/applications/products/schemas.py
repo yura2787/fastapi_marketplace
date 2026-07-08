@@ -4,6 +4,22 @@ from typing import Annotated, Optional
 from pydantic import BaseModel, Field
 
 
+class CategorySchema(BaseModel):
+    id: int
+    name: str
+    slug: str
+    description: str
+
+    class Config:
+        from_attributes = True
+
+
+class CategoryCreateSchema(BaseModel):
+    name: str = Field(max_length=100)
+    slug: str = Field(max_length=120, pattern=r"^[a-z0-9-]+$")
+    description: str = Field(default="", max_length=500)
+
+
 class ProductSchema(BaseModel):
     id: int
     title: str
@@ -11,6 +27,8 @@ class ProductSchema(BaseModel):
     price: float
     main_image: str
     images: list[str]
+    stock: int
+    category: Optional[CategorySchema] = None
 
     class Config:
         from_attributes = True
@@ -65,3 +83,7 @@ class SearchParamsSchema(BaseModel):
     order_direction: SortEnum = SortEnum.DESC
     sort_by: SortByEnum = SortByEnum.ID
     use_sharp_q_filter: bool = Field(default=False, description="used to search exact q")
+    category_id: Optional[int] = Field(default=None)
+    min_price: Optional[float] = Field(default=None, ge=0)
+    max_price: Optional[float] = Field(default=None, ge=0)
+    in_stock: Optional[bool] = Field(default=None)

@@ -3,13 +3,23 @@ from typing import Annotated
 
 from applications.auth.security import admin_required, get_current_user
 from applications.products.crud import (
+    create_category,
     create_product_in_db,
+    get_all_categories,
+    get_category_by_slug,
     get_or_create_cart,
     get_or_create_cart_product,
     get_product_by_pk,
     get_products_data,
 )
-from applications.products.schemas import CartSchema, ProductListResponse, ProductSchema, SearchParamsSchema
+from applications.products.schemas import (
+    CartSchema,
+    CategoryCreateSchema,
+    CategorySchema,
+    ProductListResponse,
+    ProductSchema,
+    SearchParamsSchema,
+)
 from applications.users.models import User
 from database.session import get_async_session
 from fastapi import APIRouter, Body, Depends, HTTPException, UploadFile, status
@@ -18,6 +28,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 products_router = APIRouter()
 cart_router = APIRouter()
+categories_router = APIRouter()
 
 
 @cart_router.get("/")
@@ -58,6 +69,19 @@ async def change_products(
     return cart
 
 
+@categories_router.get("/", response_model=list[CategorySchema])
+async def list_categories(session: AsyncSession = Depends(get_async_session)):
+    return await get_all_categories(session)
+
+
+@categories_router.post("/", response_model=CategorySchema, dependencies=[Depends(admin_required)])
+async def add_category(data: CategoryCreateSchema, session: AsyncSession = Depends(get_async_session)):
+    existing = await get_category_by_slug(data.slug, session)
+    if existing:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Category with this slug already exists")
+    return await create_category(data, session)
+
+
 @products_router.post("/", dependencies=[Depends(admin_required)])
 async def create_product(
     main_image: UploadFile,
@@ -65,6 +89,8 @@ async def create_product(
     title: str = Body(max_length=100),
     description: str = Body(max_length=1000),
     price: float = Body(gt=1),
+    stock: int = Body(default=0, ge=0),
+    category_id: int = Body(default=None),
     session: AsyncSession = Depends(get_async_session),
 ) -> ProductSchema:
     product_uuid = uuid.uuid4()
@@ -82,6 +108,8 @@ async def create_product(
         price=price,
         main_image=main_image,
         images=images_urls,
+        stock=stock,
+        category_id=category_id,
         session=session,
     )
     return create_product

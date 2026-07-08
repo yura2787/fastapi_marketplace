@@ -13,6 +13,16 @@ class ModelCommonMixin:
     created_at: Mapped[datetime] = mapped_column(default=func.now())
 
 
+class Category(ModelCommonMixin, Base):
+    __tablename__ = "categories"
+
+    name: Mapped[str] = mapped_column(String(100), nullable=False, unique=True)
+    slug: Mapped[str] = mapped_column(String(120), nullable=False, unique=True, index=True)
+    description: Mapped[str] = mapped_column(String(500), default="")
+
+    products = relationship("Product", back_populates="category", lazy="selectin")
+
+
 class Product(ModelCommonMixin, Base):
     __tablename__ = "products"
 
@@ -23,7 +33,10 @@ class Product(ModelCommonMixin, Base):
     price: Mapped[float] = mapped_column(nullable=False)
     main_image: Mapped[str] = mapped_column(nullable=False)
     images: Mapped[list[str]] = mapped_column(ARRAY(String), default=list)
+    stock: Mapped[int] = mapped_column(default=0)
+    category_id: Mapped[int | None] = mapped_column(ForeignKey("categories.id"), nullable=True, index=True)
 
+    category = relationship("Category", back_populates="products", lazy="selectin")
     cart_products = relationship(
         "CartProduct",
         back_populates="product",
