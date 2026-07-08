@@ -64,5 +64,4 @@ async def payment_stripe_data(
         # locale='fr',
         metadata={"user_id": user.id, 'total': response.cost, 'cart_id': cart.id}
     )
-    print(session_stripe)
     return {"url": session_stripe['url']}

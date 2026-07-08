@@ -8,7 +8,7 @@ import sentry_sdk
 
 sentry_sdk.init(
     dsn=settings.SENTRY,
-    send_default_pii=True,
+    send_default_pii=False,
 )
 
 def get_application() -> FastAPI:

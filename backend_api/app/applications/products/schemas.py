@@ -15,6 +15,14 @@ class ProductSchema(BaseModel):
     class Config:
         from_attributes = True
 
+
+class ProductListResponse(BaseModel):
+    items: list[ProductSchema]
+    total: int
+    page: int
+    limit: int
+    pages: int
+
 class CartProductSchema(BaseModel):
     price: float
     quantity: float
