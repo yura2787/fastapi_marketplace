@@ -1,14 +1,11 @@
 import uuid
 from datetime import datetime
-from sqlalchemy.dialects.postgresql import ARRAY
-
-from sqlalchemy import String, ForeignKey
-from sqlalchemy.orm import Mapped, mapped_column, relationship
-from sqlalchemy.sql import func
 
 from database.base_model import Base
-
-
+from sqlalchemy import ForeignKey, String
+from sqlalchemy.dialects.postgresql import ARRAY
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy.sql import func
 
 
 class ModelCommonMixin:
@@ -27,10 +24,14 @@ class Product(ModelCommonMixin, Base):
     main_image: Mapped[str] = mapped_column(nullable=False)
     images: Mapped[list[str]] = mapped_column(ARRAY(String), default=list)
 
-    cart_products = relationship("CartProduct", back_populates="product",         lazy="selectin",)
+    cart_products = relationship(
+        "CartProduct",
+        back_populates="product",
+        lazy="selectin",
+    )
 
     def __str__(self):
-        return f'Product {self.title} - {self.id}'
+        return f"Product {self.title} - {self.id}"
 
 
 class Cart(ModelCommonMixin, Base):
@@ -58,8 +59,16 @@ class CartProduct(ModelCommonMixin, Base):
     price: Mapped[float] = mapped_column(default=0.0)
     quantity: Mapped[float] = mapped_column(default=0.0)
 
-    cart = relationship("Cart", back_populates="cart_products",         lazy="selectin",)
-    product = relationship("Product", back_populates="cart_products",         lazy="selectin",)
+    cart = relationship(
+        "Cart",
+        back_populates="cart_products",
+        lazy="selectin",
+    )
+    product = relationship(
+        "Product",
+        back_populates="cart_products",
+        lazy="selectin",
+    )
 
     @property
     def total(self) -> float:

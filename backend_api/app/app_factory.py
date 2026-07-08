@@ -1,15 +1,16 @@
-from fastapi import FastAPI
+import sentry_sdk
 from applications.auth.router import router_auth
 from applications.payment.router import router_payment
+from applications.products.router import cart_router, products_router
 from applications.users.router import router_users
-from applications.products.router import products_router, cart_router
+from fastapi import FastAPI
 from settings import settings
-import sentry_sdk
 
 sentry_sdk.init(
     dsn=settings.SENTRY,
     send_default_pii=False,
 )
+
 
 def get_application() -> FastAPI:
     app = FastAPI(root_path="/api", root_path_in_servers=True, debug=settings.DEBUG)

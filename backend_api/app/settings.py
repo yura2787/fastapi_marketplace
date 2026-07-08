@@ -14,7 +14,6 @@ class Settings(BaseSettings):
     STRIPE_SUCCESS_URL: str = "http://localhost/"
     STRIPE_CANCEL_URL: str = "http://localhost/"
 
-
     DEBUG: bool = False
 
     JWT_SECRET: str
@@ -24,15 +23,13 @@ class Settings(BaseSettings):
     RMQ_PORT: int
     RMQ_VIRTUAL_HOST: str
     RMQ_USER: str
-    RMQ_PASSWORD : str
-
+    RMQ_PASSWORD: str
 
     ACCESS_KEY: str
     SECRET_KEY: str
     BUCKET_NAME: str
     ENDPOINT: str
     PUBLIC_URL: str
-
 
     SENTRY: str
 

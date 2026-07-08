@@ -1,7 +1,8 @@
 from enum import StrEnum
+from typing import Annotated, Optional
 
 from pydantic import BaseModel, Field
-from typing import Annotated, Optional
+
 
 class ProductSchema(BaseModel):
     id: int
@@ -10,7 +11,6 @@ class ProductSchema(BaseModel):
     price: float
     main_image: str
     images: list[str]
-
 
     class Config:
         from_attributes = True
@@ -23,22 +23,22 @@ class ProductListResponse(BaseModel):
     limit: int
     pages: int
 
+
 class CartProductSchema(BaseModel):
     price: float
     quantity: float
     total: float
     product: ProductSchema
 
-
     class Config:
         from_attributes = True
+
 
 class CartSchema(BaseModel):
     is_closed: bool
     user_id: int
     cost: float
     cart_products: list[CartProductSchema]
-
 
     class Config:
         from_attributes = True
@@ -48,15 +48,14 @@ class CartSchema(BaseModel):
         return self
 
 
-
 class SortEnum(StrEnum):
-    ASC = 'asc'
-    DESC = 'desc'
+    ASC = "asc"
+    DESC = "desc"
 
 
 class SortByEnum(StrEnum):
-    ID = 'id'
-    PRICE = 'price'
+    ID = "id"
+    PRICE = "price"
 
 
 class SearchParamsSchema(BaseModel):
@@ -65,4 +64,4 @@ class SearchParamsSchema(BaseModel):
     limit: Annotated[int, Field(default=10, ge=1, le=50)]
     order_direction: SortEnum = SortEnum.DESC
     sort_by: SortByEnum = SortByEnum.ID
-    use_sharp_q_filter: bool = Field(default=False, description='used to search exact q')
+    use_sharp_q_filter: bool = Field(default=False, description="used to search exact q")

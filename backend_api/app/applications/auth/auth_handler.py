@@ -1,14 +1,12 @@
 from datetime import datetime, timedelta
 
 import jwt
-from fastapi import APIRouter, Depends, HTTPException, status
-from fastapi.security import OAuth2PasswordRequestForm
-from sqlalchemy.ext.asyncio import AsyncSession
-
 from applications.auth.password_handler import PasswordEncrypt
 from applications.users.crud import get_user_by_email
-from database.session_dependenscise import get_async_session
+from fastapi import HTTPException, status
+from fastapi.security import OAuth2PasswordRequestForm
 from settings import settings
+from sqlalchemy.ext.asyncio import AsyncSession
 
 
 class AuthHandler:
@@ -52,8 +50,9 @@ class AuthHandler:
             payload = jwt.decode(token, self.secret, [self.algorithm])
             return payload
         except jwt.ExpiredSignatureError:
-            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail='Time is out')
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Time is out")
         except jwt.InvalidTokenError:
-            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail='Invalid token')
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Invalid token")
+
 
 auth_handler = AuthHandler()

@@ -1,11 +1,9 @@
-from typing import Annotated
-from fastapi import Depends
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import asc, desc, select, func, or_, and_
 import math
 
-from applications.products.models import Product, Cart, CartProduct
-from applications.products.schemas import SearchParamsSchema, SortEnum, SortByEnum
+from applications.products.models import Cart, CartProduct, Product
+from applications.products.schemas import SearchParamsSchema, SortByEnum, SortEnum
+from sqlalchemy import and_, asc, desc, func, or_, select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 
 async def create_product_in_db(product_uuid, title, description, price, main_image, images, session) -> Product:
@@ -24,7 +22,7 @@ async def create_product_in_db(product_uuid, title, description, price, main_ima
         description=description.strip(),
         price=price,
         main_image=main_image,
-        images=images
+        images=images,
     )
     session.add(new_product)
 
@@ -64,16 +62,18 @@ async def get_products_data(params: SearchParamsSchema, session: AsyncSession):
     return {
         "items": result.scalars().all(),
         "total": total,
-        'page': params.page,
-        'limit': params.limit,
-        'pages': math.ceil(total / params.limit)
+        "page": params.page,
+        "limit": params.limit,
+        "pages": math.ceil(total / params.limit),
     }
+
 
 async def get_product_by_pk(pk: int, session: AsyncSession) -> Product | None:
     query = select(Product).filter(Product.id == pk)
     # query = select(Product).filter_by(id = pk)
     result = await session.execute(query)
     return result.scalar_one_or_none()
+
 
 async def get_or_create_cart(user_id: int, session: AsyncSession) -> Cart:
     query = select(Cart).filter_by(user_id=user_id, is_closed=False)
@@ -87,7 +87,6 @@ async def get_or_create_cart(user_id: int, session: AsyncSession) -> Cart:
     session.add(cart)
     await session.commit()
     return cart
-
 
 
 async def get_or_create_cart_product(product_id: int, cart_id: int, session: AsyncSession) -> CartProduct:

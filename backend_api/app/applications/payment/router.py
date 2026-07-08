@@ -1,13 +1,12 @@
 import stripe
-from fastapi import APIRouter, Depends
-from sqlalchemy.ext.asyncio import AsyncSession
-
 from applications.auth.security import get_current_user
 from applications.products.crud import get_or_create_cart
 from applications.products.schemas import CartSchema
 from applications.users.models import User
-from database.session_dependenscise import get_async_session
+from database.session import get_async_session
+from fastapi import APIRouter, Depends
 from settings import settings
+from sqlalchemy.ext.asyncio import AsyncSession
 
 stripe.api_key = settings.STRIPE_SECRET_KEY
 
@@ -30,13 +29,11 @@ async def payment_stripe_data(
                 "product_data": {
                     "name": cart_product.product.title,
                     "description": cart_product.product.description,
-                    'images': [cart_product.product.main_image] + cart_product.product.images
+                    "images": [cart_product.product.main_image] + cart_product.product.images,
                 },
                 "unit_amount": round(cart_product.price * 100),
-
             },
-            "quantity": int(cart_product.quantity)
-
+            "quantity": int(cart_product.quantity),
         }
         for cart_product in response.cart_products
     ]
@@ -47,6 +44,6 @@ async def payment_stripe_data(
         success_url=settings.STRIPE_SUCCESS_URL,
         cancel_url=settings.STRIPE_CANCEL_URL,
         customer_email=user.email,
-        metadata={"user_id": user.id, 'total': response.cost, 'cart_id': cart.id}
+        metadata={"user_id": user.id, "total": response.cost, "cart_id": cart.id},
     )
-    return {"url": session_stripe['url']}
+    return {"url": session_stripe["url"]}
