@@ -8,8 +8,6 @@ from applications.products.schemas import ProductSchema, SearchParamsSchema, Car
 from services.s3.s3 import s3_storage
 from sqlalchemy.ext.asyncio import AsyncSession
 from applications.users.models import User
-from applications.users.crud import create_user_in_db, get_user_by_email, activate_user_account
-from applications.users.schemas import BaseUserInfo, RegisterUserFields
 from database.session_dependenscise import get_async_session
 
 products_router = APIRouter()
@@ -54,10 +52,6 @@ async def change_products(
     return cart
 
 
-@products_router.post('/',
-                      # dependencies=[Depends(admin_required)]
-                      )
-
 @products_router.post('/', dependencies=[Depends(admin_required)])
 async def create_product(
         main_image: UploadFile,
@@ -68,7 +62,6 @@ async def create_product(
         session: AsyncSession = Depends(get_async_session),
 ) -> ProductSchema:
     product_uuid = uuid.uuid4()
-    product_uuid_str = str(product_uuid)
     main_image = await s3_storage.upload_product_image(main_image, product_uuid=product_uuid)
     images = images or []
     images_urls = []

@@ -1,6 +1,5 @@
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
-from poetry.utils.helpers import directory
 
 from routers.main_page_router import router
 from settings import settings

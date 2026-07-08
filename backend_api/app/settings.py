@@ -11,6 +11,8 @@ class Settings(BaseSettings):
     POSTGRES_HOST: str
 
     STRIPE_SECRET_KEY: str
+    STRIPE_SUCCESS_URL: str = "http://localhost/"
+    STRIPE_CANCEL_URL: str = "http://localhost/"
 
 
     DEBUG: bool = False

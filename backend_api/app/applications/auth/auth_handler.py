@@ -43,6 +43,10 @@ class AuthHandler:
         token = jwt.encode(payload | time_payload, self.secret, self.algorithm)
         return token
 
+    async def refresh_access_token(self, refresh_token: str) -> dict:
+        payload = await self.decode_token(refresh_token)
+        return await self.generate_token_pairs(payload["user_email"])
+
     async def decode_token(self, token: str) -> dict:
         try:
             payload = jwt.decode(token, self.secret, [self.algorithm])

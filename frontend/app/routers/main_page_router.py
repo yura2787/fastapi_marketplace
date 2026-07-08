@@ -61,7 +61,7 @@ async def login(request: Request, user: dict = Depends(get_current_user_with_tok
         context['errors'] = errors
         return templates.TemplateResponse('login.html', context=context)
     response = RedirectResponse(redirect_url, status_code=status.HTTP_303_SEE_OTHER)
-    response.set_cookie(key="access_token", value=access_token, httponly=True, max_age=60 * 5)
+    response.set_cookie(key="access_token", value=access_token, httponly=True, max_age=60 * 50)
     return response
 
 
@@ -103,7 +103,7 @@ async def register(
         access_token = user_tokens.get('access_token')
 
         response = RedirectResponse(redirect_url, status_code=status.HTTP_303_SEE_OTHER)
-        response.set_cookie(key="access_token", value=access_token, httponly=True, max_age=60*5)
+        response.set_cookie(key="access_token", value=access_token, httponly=True, max_age=60 * 50)
         return response
 
     context['errors'] = [created_user['detail']]
