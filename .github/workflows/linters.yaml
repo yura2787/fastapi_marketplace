@@ -1,52 +1,30 @@
-name: test with poetry
+name: Lint
 
-on: pull_request
+on:
+  pull_request:
+  push:
+    branches: [main]
 
 jobs:
-  test:
+  lint:
     runs-on: ubuntu-latest
     steps:
-      #----------------------------------------------
-      #       check-out repo and set-up python
-      #----------------------------------------------
       - name: Check out repository
-        uses: actions/checkout@v3
-      - name: Set up python
-        id: setup-python
-        uses: actions/setup-python@v4
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      #----------------------------------------------
-      #  -----  install & configure poetry  -----
-      #----------------------------------------------
-      - name: Install Poetry
-        uses: snok/install-poetry@v1
-        with:
-          virtualenvs-create: true
-          virtualenvs-in-project: true
-          installer-parallel: true
 
+      - name: Install linters
+        run: pip install black isort flake8
 
+      - name: black
+        run: black --check --line-length 120 --extend-exclude 'migrations' backend_api/app frontend/app notification_service/app
 
-      - name: Install dependencies
-        run: |
-          poetry init -n
-          if ! grep -q 'package-mode' pyproject.toml; then
-             echo '[tool.poetry]' >> pyproject.toml
-             echo 'package-mode = false' >> pyproject.toml
-          fi
-          poetry install
-          poetry add black
-          poetry add isort
-          poetry add flake8
-      #----------------------------------------------
-      #              run test suite
-      #----------------------------------------------
-      - name: Run tests
-        run: |
-          source .venv/bin/activate
-          black . --line-length 120 
-          isort . --line-length 120
-          flake8 .
-          cat backend_api/app/applications/users/router.py
+      - name: isort
+        run: isort --check-only --profile black --line-length 120 --skip migrations backend_api/app frontend/app notification_service/app
 
+      - name: flake8
+        run: flake8 backend_api/app frontend/app notification_service/app

@@ -1,9 +1,8 @@
+from applications.auth.password_handler import PasswordEncrypt
+from applications.users.models import User
 from fastapi import HTTPException
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-
-from applications.auth.password_handler import PasswordEncrypt
-from applications.users.models import User
 
 
 async def create_user_in_db(email, name, password, session: AsyncSession):
@@ -11,11 +10,9 @@ async def create_user_in_db(email, name, password, session: AsyncSession):
     new_user = User(email=email, hashed_password=hashed_password, name=name)
     session.add(new_user)
 
-
     await session.commit()
 
     return new_user
-
 
 
 async def get_user_by_email(email, session: AsyncSession) -> User | None:
@@ -29,7 +26,7 @@ async def activate_user_account(user_uuid, session: AsyncSession):
     result = await session.execute(query)
     user = result.scalar_one_or_none()
     if not user:
-        raise HTTPException(status_code=400, detail='Provided data does not belongs')
+        raise HTTPException(status_code=400, detail="Provided data does not belongs")
 
     user.is_verified = True
     session.add(user)

@@ -1,14 +1,20 @@
-from fastapi import APIRouter, Body, UploadFile, Depends, HTTPException, status
 import uuid
 from typing import Annotated
-from applications.auth.security import admin_required, get_current_user
 
-from applications.products.crud import create_product_in_db, get_products_data, get_product_by_pk, get_or_create_cart, get_or_create_cart_product
-from applications.products.schemas import ProductSchema, SearchParamsSchema, CartSchema, ProductListResponse
+from applications.auth.security import admin_required, get_current_user
+from applications.products.crud import (
+    create_product_in_db,
+    get_or_create_cart,
+    get_or_create_cart_product,
+    get_product_by_pk,
+    get_products_data,
+)
+from applications.products.schemas import CartSchema, ProductListResponse, ProductSchema, SearchParamsSchema
+from applications.users.models import User
+from database.session import get_async_session
+from fastapi import APIRouter, Body, Depends, HTTPException, UploadFile, status
 from services.s3.s3 import s3_storage
 from sqlalchemy.ext.asyncio import AsyncSession
-from applications.users.models import User
-from database.session_dependenscise import get_async_session
 
 products_router = APIRouter()
 cart_router = APIRouter()
@@ -18,12 +24,13 @@ cart_router = APIRouter()
 async def get_current_cart(
     user: User = Depends(get_current_user),
     session: AsyncSession = Depends(get_async_session),
-)  -> CartSchema:
+) -> CartSchema:
     cart = await get_or_create_cart(user_id=user.id, session=session)
 
     response = CartSchema.from_orm(cart)
     response = response.filter_zero_quantity_products()
     return response
+
 
 @cart_router.patch("/change-products")
 async def change_products(
@@ -31,12 +38,11 @@ async def change_products(
     product_id: int,
     user: User = Depends(get_current_user),
     session: AsyncSession = Depends(get_async_session),
-
 ) -> CartSchema:
     cart = await get_or_create_cart(user_id=user.id, session=session)
     product = await get_product_by_pk(product_id, session)
     if not product:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='No product')
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="No product")
 
     cart_product = await get_or_create_cart_product(product_id, cart.id, session)
     cart_product.quantity += quantity
@@ -52,14 +58,14 @@ async def change_products(
     return cart
 
 
-@products_router.post('/', dependencies=[Depends(admin_required)])
+@products_router.post("/", dependencies=[Depends(admin_required)])
 async def create_product(
-        main_image: UploadFile,
-        images: list[UploadFile] = None,
-        title: str = Body(max_length=100),
-        description: str = Body(max_length=1000),
-        price: float = Body(gt=1),
-        session: AsyncSession = Depends(get_async_session),
+    main_image: UploadFile,
+    images: list[UploadFile] = None,
+    title: str = Body(max_length=100),
+    description: str = Body(max_length=1000),
+    price: float = Body(gt=1),
+    session: AsyncSession = Depends(get_async_session),
 ) -> ProductSchema:
     product_uuid = uuid.uuid4()
     main_image = await s3_storage.upload_product_image(main_image, product_uuid=product_uuid)
@@ -69,20 +75,32 @@ async def create_product(
         url = await s3_storage.upload_product_image(image, product_uuid=product_uuid)
         images_urls.append(url)
 
-    create_product = await  create_product_in_db(product_uuid=product_uuid, title=title, description=description, price=price,
-                                main_image=main_image, images=images_urls, session=session)
+    create_product = await create_product_in_db(
+        product_uuid=product_uuid,
+        title=title,
+        description=description,
+        price=price,
+        main_image=main_image,
+        images=images_urls,
+        session=session,
+    )
     return create_product
 
 
-@products_router.get('/{pk}')
-async def get_product(pk: int, session: AsyncSession = Depends(get_async_session),) -> ProductSchema:
+@products_router.get("/{pk}")
+async def get_product(
+    pk: int,
+    session: AsyncSession = Depends(get_async_session),
+) -> ProductSchema:
     product = await get_product_by_pk(pk, session)
     if not product:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Product with pk #{pk} not found")
     return product
 
 
-@products_router.get('/', response_model=ProductListResponse)
-async def get_products(params: Annotated[SearchParamsSchema, Depends()], session: AsyncSession = Depends(get_async_session)):
+@products_router.get("/", response_model=ProductListResponse)
+async def get_products(
+    params: Annotated[SearchParamsSchema, Depends()], session: AsyncSession = Depends(get_async_session)
+):
     result = await get_products_data(params, session)
     return result

@@ -1,16 +1,10 @@
-from http.client import HTTPException
-
-from fastapi.security import OAuth2PasswordBearer
-from fastapi import Depends, HTTPException, status
-
-
+from applications.auth.auth_handler import auth_handler
 from applications.users.crud import get_user_by_email
 from applications.users.models import User
+from database.session import get_async_session
+from fastapi import Depends, HTTPException, status
+from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.ext.asyncio import AsyncSession
-
-from database.session_dependenscise import get_async_session
-
-from applications.auth.auth_handler import auth_handler
 
 
 class SecurityHandler:
