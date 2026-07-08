@@ -1,3 +1,4 @@
+import json
 import uuid
 from typing import Annotated
 
@@ -23,6 +24,7 @@ from applications.products.schemas import (
 from applications.users.models import User
 from database.session import get_async_session
 from fastapi import APIRouter, Body, Depends, HTTPException, UploadFile, status
+from services.redis.redis_client import cache_get, cache_invalidate_prefix, cache_set, get_redis, make_cache_key
 from services.s3.s3 import s3_storage
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -112,6 +114,8 @@ async def create_product(
         category_id=category_id,
         session=session,
     )
+    redis = await get_redis()
+    await cache_invalidate_prefix(redis, "products_list")
     return create_product
 
 
@@ -130,5 +134,12 @@ async def get_product(
 async def get_products(
     params: Annotated[SearchParamsSchema, Depends()], session: AsyncSession = Depends(get_async_session)
 ):
+    redis = await get_redis()
+    cache_key = make_cache_key("products_list", params.model_dump())
+    cached = await cache_get(redis, cache_key)
+    if cached:
+        return json.loads(cached)
+
     result = await get_products_data(params, session)
+    await cache_set(redis, cache_key, json.dumps(result, default=str), ttl=60)
     return result

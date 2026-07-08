@@ -1,5 +1,6 @@
 from applications.orders.models import Order, OrderItem, OrderStatus
 from applications.products.models import Cart
+from services.websocket.manager import ws_manager
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -64,3 +65,4 @@ async def mark_order_paid(order: Order, session: AsyncSession) -> None:
             session.add(cart)
 
     await session.commit()
+    await ws_manager.notify_user(order.user_id, {"type": "order_paid", "order_id": order.id})
