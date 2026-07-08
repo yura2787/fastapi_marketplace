@@ -69,7 +69,17 @@ make bash    # shell into the backend container
 | POST | `/api/products/` | admin | Create a product (with image upload) |
 | GET | `/api/carts/` | ✅ | Current user's cart |
 | PATCH | `/api/carts/change-products` | ✅ | Add/remove items from cart |
-| GET | `/api/payment/payment-stripe-data` | ✅ | Create a Stripe checkout session |
+| GET | `/api/payment/payment-stripe-data` | ✅ | Create a Stripe checkout session + pending order |
+| POST | `/api/payment/webhook` | Stripe | Marks the order paid and closes the cart |
+| GET | `/api/orders/` | ✅ | List the current user's orders |
+| GET | `/api/orders/{order_id}` | ✅ | Order details with line items |
+
+### Checkout flow
+1. `GET /api/payment/payment-stripe-data` creates a Stripe Checkout session and a
+   **pending** `Order` (with a snapshot of cart items) and returns the payment URL.
+2. The user pays on Stripe's hosted page.
+3. Stripe calls `POST /api/payment/webhook` → the order is marked **paid** and the
+   cart is closed. Set `STRIPE_WEBHOOK_SECRET` to enable signature verification.
 
 ## Code quality
 

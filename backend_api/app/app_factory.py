@@ -1,5 +1,6 @@
 import sentry_sdk
 from applications.auth.router import router_auth
+from applications.orders.router import router_orders
 from applications.payment.router import router_payment
 from applications.products.router import cart_router, products_router
 from applications.users.router import router_users
@@ -18,5 +19,6 @@ def get_application() -> FastAPI:
     app.include_router(router_auth, prefix="/auth", tags=["Auth"])
     app.include_router(products_router, prefix="/products", tags=["Products"])
     app.include_router(cart_router, prefix="/carts", tags=["Cart"])
+    app.include_router(router_orders, prefix="/orders", tags=["Orders"])
     app.include_router(router_payment, prefix="/payment", tags=["Payment"])
     return app
