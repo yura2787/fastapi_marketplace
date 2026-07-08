@@ -1,3 +1,4 @@
+import logging
 import uuid
 
 from applications.users.crud import activate_user_account, create_user_in_db, get_user_by_email
@@ -7,6 +8,8 @@ from fastapi import APIRouter, Depends, HTTPException, Request, status
 from services.rabbit.constants import SupportedQueues
 from services.rabbit.rabbitmq_service import rabbitmq_broker
 from sqlalchemy.ext.asyncio import AsyncSession
+
+logger = logging.getLogger(__name__)
 
 router_users = APIRouter()
 
@@ -20,14 +23,17 @@ async def create_user(
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Already exists")
 
     created_user = await create_user_in_db(new_user.email, new_user.name, new_user.password, session)
-    await rabbitmq_broker.send_message(
-        message={
-            "name": created_user.name,
-            "email": created_user.email,
-            "redirect_url": str(request.url_for("verify_user", user_uuid=created_user.uuid_data)),
-        },
-        queue_name=SupportedQueues.USER_REGISTRATION,
-    )
+    try:
+        await rabbitmq_broker.send_message(
+            message={
+                "name": created_user.name,
+                "email": created_user.email,
+                "redirect_url": str(request.url_for("verify_user", user_uuid=created_user.uuid_data)),
+            },
+            queue_name=SupportedQueues.USER_REGISTRATION,
+        )
+    except Exception as exc:
+        logger.warning("Failed to send registration email for %s: %s", created_user.email, exc)
 
     return created_user
 

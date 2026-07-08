@@ -1,12 +1,14 @@
-import json
 import uuid
-from typing import Annotated
+from typing import Annotated, Optional
 
 from applications.auth.security import admin_required, get_current_user
 from applications.products.crud import (
     create_category,
     create_product_in_db,
+    delete_category,
+    delete_product,
     get_all_categories,
+    get_category_by_id,
     get_category_by_slug,
     get_or_create_cart,
     get_or_create_cart_product,
@@ -23,7 +25,7 @@ from applications.products.schemas import (
 )
 from applications.users.models import User
 from database.session import get_async_session
-from fastapi import APIRouter, Body, Depends, HTTPException, UploadFile, status
+from fastapi import APIRouter, Body, Depends, Form, HTTPException, UploadFile, status
 from services.redis.redis_client import cache_get, cache_invalidate_prefix, cache_set, get_redis, make_cache_key
 from services.s3.s3 import s3_storage
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -84,6 +86,14 @@ async def add_category(data: CategoryCreateSchema, session: AsyncSession = Depen
     return await create_category(data, session)
 
 
+@categories_router.delete("/{pk}", dependencies=[Depends(admin_required)], status_code=204)
+async def remove_category(pk: int, session: AsyncSession = Depends(get_async_session)):
+    category = await get_category_by_id(pk, session)
+    if not category:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Category #{pk} not found")
+    await delete_category(category, session)
+
+
 @products_router.post("/", dependencies=[Depends(admin_required)])
 async def create_product(
     main_image: UploadFile,
@@ -92,7 +102,7 @@ async def create_product(
     description: str = Body(max_length=1000),
     price: float = Body(gt=1),
     stock: int = Body(default=0, ge=0),
-    category_id: int = Body(default=None),
+    category_id: Optional[int] = Form(default=None),
     session: AsyncSession = Depends(get_async_session),
 ) -> ProductSchema:
     product_uuid = uuid.uuid4()
@@ -119,6 +129,19 @@ async def create_product(
     return create_product
 
 
+@products_router.delete("/{pk}", dependencies=[Depends(admin_required)], status_code=204)
+async def remove_product(
+    pk: int,
+    session: AsyncSession = Depends(get_async_session),
+):
+    product = await get_product_by_pk(pk, session)
+    if not product:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Product #{pk} not found")
+    await delete_product(product, session)
+    redis = await get_redis()
+    await cache_invalidate_prefix(redis, "products_list")
+
+
 @products_router.get("/{pk}")
 async def get_product(
     pk: int,
@@ -138,8 +161,9 @@ async def get_products(
     cache_key = make_cache_key("products_list", params.model_dump())
     cached = await cache_get(redis, cache_key)
     if cached:
-        return json.loads(cached)
+        return ProductListResponse.model_validate_json(cached)
 
     result = await get_products_data(params, session)
-    await cache_set(redis, cache_key, json.dumps(result, default=str), ttl=60)
-    return result
+    response = ProductListResponse.model_validate(result)
+    await cache_set(redis, cache_key, response.model_dump_json(), ttl=60)
+    return response

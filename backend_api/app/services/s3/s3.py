@@ -14,7 +14,7 @@ class S3Storage:
             endpoint_url=settings.ENDPOINT,
             aws_access_key_id=settings.ACCESS_KEY,
             aws_secret_access_key=settings.SECRET_KEY,
-            region_name="EEUR",
+            region_name="auto",
         ) as s3:
             yield s3
 

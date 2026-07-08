@@ -26,7 +26,6 @@ def upgrade() -> None:
         sa.Column("created_at", sa.DateTime(), nullable=False),
         sa.PrimaryKeyConstraint("id"),
         sa.UniqueConstraint("name"),
-        sa.UniqueConstraint("slug"),
     )
     op.create_index(op.f("ix_categories_slug"), "categories", ["slug"], unique=True)
 
