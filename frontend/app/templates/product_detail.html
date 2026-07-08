@@ -1,0 +1,57 @@
+{% extends "components/base.html" %}
+
+
+
+
+  {% block content %}
+
+
+
+<div class="container mt-5">
+
+
+
+
+    <img src="{{ product.main_image }}" class="card-img-top" alt="..." width="250px">
+
+      <h5 class="card-title">{{ product.title }}</h5>
+      <p class="card-text">{{ product.description }}</p>
+      <p class="card-text">Price: {{ product.price }} grn</p>
+      <a href="{{ url_for('index') }}" class="btn btn-primary"> main page</a>
+
+
+
+
+<div id="carouselExample" class="carousel slide">
+  <div class="carousel-inner">
+
+    {% for image in product.images %}
+    <div class="carousel-item active">
+      <img src="{{ image }}" class="d-block w-50" alt="...">
+    </div>
+
+    {% endfor %}
+
+
+  </div>
+  <button class="carousel-control-prev" type="button" data-bs-target="#carouselExample" data-bs-slide="prev">
+    <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+    <span class="visually-hidden">Previous</span>
+  </button>
+  <button class="carousel-control-next" type="button" data-bs-target="#carouselExample" data-bs-slide="next">
+    <span class="carousel-control-next-icon" aria-hidden="true"></span>
+    <span class="visually-hidden">Next</span>
+  </button>
+</div>
+
+
+
+
+</div>
+
+
+
+
+
+
+  {% endblock %}
