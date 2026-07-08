@@ -32,6 +32,8 @@ class Settings(BaseSettings):
     ENDPOINT: str
     PUBLIC_URL: str
 
+    REDIS_URL: str = "redis://redis:6379"
+
     SENTRY: str
 
     @property
